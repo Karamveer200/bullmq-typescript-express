@@ -1,4 +1,4 @@
-name: clypt-email-service-dev
+name: bullmq-email-service-dev
 
 services:
   redis:
