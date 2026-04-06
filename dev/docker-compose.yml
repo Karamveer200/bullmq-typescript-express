@@ -1,0 +1,75 @@
+name: clypt-email-service-dev
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    ports:
+      - "5540:5540"
+    volumes:
+      - dev_redisinsight_data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  node_server:
+    build:
+      context: ..
+      dockerfile: dev/Dockerfile
+    command:
+      - npx
+      - tsx
+      - watch
+      - --include
+      - "src/**/*.ts"
+      - src/index.ts
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: "3000"
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "250"
+    ports:
+      - "3000:3000"
+    working_dir: /workspace
+    volumes:
+      - ../:/workspace
+      - dev_node_modules:/workspace/node_modules
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: dev/Dockerfile
+    # `--inspect-brk` pauses until a debugger attaches on 9230 (use "Attach to Worker (Docker)" before continuing).
+    command:
+      - sh
+      - -c
+      - exec node --inspect-brk=0.0.0.0:9230 --import tsx --watch src/worker-cli.ts
+    environment:
+      REDIS_URL: redis://redis:6379
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "250"
+    ports:
+      - "9230:9230"
+    working_dir: /workspace
+    volumes:
+      - ../:/workspace
+      - dev_node_modules:/workspace/node_modules
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  dev_node_modules:
+  dev_redisinsight_data:

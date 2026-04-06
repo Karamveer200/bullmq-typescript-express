@@ -1,0 +1,59 @@
+{
+  // worker.test.ts runs the test on 9229; worker-cli runs in Docker on 9230 — two processes.
+  // 1) docker compose up  2) Run compound "Attach: test + Docker worker" (or attach 9230 first)  3) npm run test:debug
+  // Breakpoints in src/bullmq/worker/* only bind on the 9230 session.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to test process (9229)",
+      "port": 9229,
+      "address": "127.0.0.1",
+      "sourceMaps": true,
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to Worker (Docker)",
+      "port": 9230,
+      "address": "127.0.0.1",
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/workspace",
+      "restart": true,
+      "sourceMaps": true,
+      "smartStep": true,
+      "sourceMapPathOverrides": {
+        "file:///workspace/": "${workspaceFolder}/",
+        "/workspace/": "${workspaceFolder}/"
+      },
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Attach: test + Docker worker (breakpoints in worker TS)",
+      "configurations": [
+        "Attach to test process (9229)",
+        "Attach to Worker (Docker)"
+      ],
+      "stopAll": true
+    }
+  ]
+}
