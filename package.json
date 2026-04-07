@@ -8,8 +8,13 @@
     "start": "node dist/index.js",
     "start:worker": "node dist/worker-cli.js",
     "dev": "tsx watch src/index.ts",
+<<<<<<< Updated upstream
     "test": "node --env-file=.env.test --import tsx --test --test-force-exit test/**/*.test.ts",
     "test:debug": "node --inspect-brk=0.0.0.0:9229 --env-file=.env.test --import tsx --test --test-isolation=none --test-force-exit test/functional/worker.test.ts"
+=======
+    "test": "node --env-file=.env --import tsx --test --test-force-exit test/**/*.test.ts",
+    "test:debug": "node --inspect-brk=0.0.0.0:9229 --env-file=.env --import tsx --test --test-isolation=none --test-force-exit test/functional/sendOtp.test.ts"
+>>>>>>> Stashed changes
   },
   "engines": {
     "node": ">=20"

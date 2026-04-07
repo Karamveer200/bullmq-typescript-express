@@ -1,3 +1,9 @@
+# BullMQ Email Service
+
+Working **email delivery** stack: an **Express** API accepts mail jobs, **BullMQ** queues them in **Redis**, and a **worker** sends messages with **SendGrid** (`@sendgrid/mail`). Configure **`SENDGRID_API_KEY`** and **`MAIL_FROM`** for production sends (see `.env.example` and `src/services/SendGridMail.ts`).
+
+---
+
 # Development
 
 Docker Compose stack: Redis, Redis Insight, HTTP API, BullMQ worker. Bind-mount is `../ → /workspace` in containers; deps live in volume `dev_node_modules`.
@@ -34,9 +40,9 @@ curl -s -X POST http://localhost:3000/api/new-task \
 
 ## Tests & env
 
-- **`npm test`** — loads `.env.test`; runs `test/**/*.test.ts` (needs Redis at `REDIS_URL`, usually `127.0.0.1:6379` with Compose up).
-- **`npm run test:perf`** — load test (`test/functional/performance.test.ts`). In-process worker + `perfProcessEmailJob` override in that file; stop Compose **`worker`** so the queue has one consumer. Env: **`PERF_RPS`**, **`PERF_SECONDS`**.
+- **`npm test`** — loads `.env`; runs `test/**/*.test.ts` (needs Redis at `REDIS_URL`, usually `127.0.0.1:6379` with Compose up).
 - **`npm run test:debug`** — **9229** = test. `worker-cli` in Docker is **9230** — use compound **"Attach: test + Docker worker"** in `.vscode/launch.json` before continuing (worker uses **inspect-brk** so it waits for attach).
+- **`test/behavioral/performance.test.ts`** — sustained load; stop Compose **`worker`** so only the test’s in-process consumer runs the queue. Optional env: **`PERF_RPS`**, **`PERF_SECONDS`**.
 
 Copy `.env.example` → `.env` for local non-Docker runs.
 

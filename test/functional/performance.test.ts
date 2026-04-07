@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import type { Server } from "node:http";
 import type { Redis } from "ioredis";
+<<<<<<< Updated upstream:test/functional/performance.test.ts
 import { createApp } from "../../src/server.js";
 
 import { EmailJobQueue } from "../../src/bullmq/EmailJobQueue.js";
@@ -12,6 +12,29 @@ import {
 } from "../../src/bullmq/worker/EmailJobWorker.js";
 import { BullMqRedisFactory } from "../../src/bullmq/BullMqRedisFactory.js";
 import { EmailJobQueueEvents } from "../setup/EmailJobQueueEvents.js";
+=======
+import { EMAIL_QUEUE_NAMES } from "../../src/bullmq/config/emailJobConfig.js";
+import type { EmailJobPayload } from "../../src/api/newTaskSchema.js";
+import {
+  EmailJobProcessor,
+  NotificationsEmailJobWorker,
+} from "../../src/bullmq/worker/EmailWorkers.js";
+import { BullMqRedisFactory } from "../../src/bullmq/BullMqRedisFactory.js";
+import { EmailJobQueueEvents } from "../setup/EmailJobQueueEvents.js";
+import { startTestEmailApiServer } from "../setup/testEmailApiServer.js";
+import type {
+  MailMessage,
+  MailTransport,
+} from "../../src/services/mail/MailTransport.js";
+
+class LoggingMailTransport implements MailTransport {
+  async send(message: MailMessage): Promise<void> {
+    console.log(
+      `[mail:log] to=${message.to} subject=${message.subject} textChars=${message.text.length} htmlChars=${message.html.length}`,
+    );
+  }
+}
+>>>>>>> Stashed changes:test/behavioral/performance.test.ts
 
 function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
@@ -40,10 +63,13 @@ describe("functional: API load (requests/sec)", () => {
   const rps = Math.max(1, Number(process.env.PERF_RPS ?? 100));
   const seconds = Math.max(1, Number(process.env.PERF_SECONDS ?? 5));
 
-  let server: Server;
   let baseUrl: string;
   let queueEvents: EmailJobQueueEvents;
+<<<<<<< Updated upstream:test/functional/performance.test.ts
   let emailQueue: EmailJobQueue;
+=======
+  let closeApi: () => Promise<void>;
+>>>>>>> Stashed changes:test/behavioral/performance.test.ts
   let eventsRedis: Redis;
   let worker: EmailJobWorker;
   const factory = new BullMqRedisFactory();
@@ -53,6 +79,7 @@ describe("functional: API load (requests/sec)", () => {
     queueEvents = new EmailJobQueueEvents(eventsRedis);
     await queueEvents.waitUntilReady();
 
+<<<<<<< Updated upstream:test/functional/performance.test.ts
     emailQueue = new EmailJobQueue(factory.createConnection());
     worker = new EmailJobWorker(factory.createConnection(), perfProcessEmailJob);
 
@@ -65,17 +92,27 @@ describe("functional: API load (requests/sec)", () => {
     const addr = server.address();
     assert.ok(addr && typeof addr === "object");
     baseUrl = `http://127.0.0.1:${addr.port}`;
+=======
+    const api = await startTestEmailApiServer(factory);
+    baseUrl = api.baseUrl;
+    closeApi = api.close;
+
+    worker = new NotificationsEmailJobWorker(
+      factory.createConnection(),
+      perfProcessEmailJob,
+    );
+>>>>>>> Stashed changes:test/behavioral/performance.test.ts
   });
 
   after(async () => {
     await worker.close();
     await queueEvents.close();
+<<<<<<< Updated upstream:test/functional/performance.test.ts
     await emailQueue.close();
+=======
+    await closeApi();
+>>>>>>> Stashed changes:test/behavioral/performance.test.ts
     await eventsRedis.quit();
-    await new Promise<void>((resolve, reject) => {
-      server.closeAllConnections?.();
-      server.close((err) => (err ? reject(err) : resolve()));
-    });
   });
 
   test(`POST /api/new-task at ~${rps}/s for ${seconds}s`, async () => {

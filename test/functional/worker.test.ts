@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import type { Server } from "node:http";
 import type { Redis } from "ioredis";
+<<<<<<< Updated upstream:test/functional/worker.test.ts
 import { createApp } from "../../src/server.js";
 
 import { EmailJobQueue } from "../../src/bullmq/EmailJobQueue.js";
+=======
+import { EMAIL_QUEUE_NAMES } from "../../src/bullmq/config/emailJobConfig.js";
+>>>>>>> Stashed changes:test/behavioral/worker.test.ts
 import { BullMqRedisFactory } from "../../src/bullmq/BullMqRedisFactory.js";
 import { EmailJobQueueEvents } from "../setup/EmailJobQueueEvents.js";
+import { startTestEmailApiServer } from "../setup/testEmailApiServer.js";
 
 /**
  * Needs Redis + Docker `worker` (worker-cli). Debugging worker code:
@@ -14,10 +18,13 @@ import { EmailJobQueueEvents } from "../setup/EmailJobQueueEvents.js";
  * (or attach **9230** first) → `npm run test:debug`. Test process uses **9229**; worker uses **9230**.
  */
 describe("functional: API + external worker-cli", () => {
-  let server: Server;
   let baseUrl: string;
   let queueEvents: EmailJobQueueEvents;
+<<<<<<< Updated upstream:test/functional/worker.test.ts
   let emailQueue: EmailJobQueue;
+=======
+  let closeApi: () => Promise<void>;
+>>>>>>> Stashed changes:test/behavioral/worker.test.ts
   let eventsRedis: Redis;
   const factory = new BullMqRedisFactory();
 
@@ -26,6 +33,7 @@ describe("functional: API + external worker-cli", () => {
     queueEvents = new EmailJobQueueEvents(eventsRedis);
     await queueEvents.waitUntilReady();
 
+<<<<<<< Updated upstream:test/functional/worker.test.ts
     emailQueue = new EmailJobQueue(factory.createConnection());
 
     const app = createApp({ emailQueue });
@@ -37,16 +45,21 @@ describe("functional: API + external worker-cli", () => {
     const addr = server.address();
     assert.ok(addr && typeof addr === "object");
     baseUrl = `http://127.0.0.1:${addr.port}`;
+=======
+    const api = await startTestEmailApiServer(factory);
+    baseUrl = api.baseUrl;
+    closeApi = api.close;
+>>>>>>> Stashed changes:test/behavioral/worker.test.ts
   });
 
   after(async () => {
     await queueEvents.close();
+<<<<<<< Updated upstream:test/functional/worker.test.ts
     await emailQueue.close();
+=======
+    await closeApi();
+>>>>>>> Stashed changes:test/behavioral/worker.test.ts
     await eventsRedis.quit();
-    await new Promise<void>((resolve, reject) => {
-      server.closeAllConnections?.();
-      server.close((err) => (err ? reject(err) : resolve()));
-    });
   });
 
   test("POST /api/new-task is completed by worker-cli (separate process)", async () => {
